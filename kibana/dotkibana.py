@@ -6,16 +6,20 @@ from .manager import KibanaManager
 
 
 class DotKibana():
-    def __init__(self, index_pattern='*', host=('localhost', 9200), index='.kibana', debug=False):
+    def __init__(self, index_pattern='*', host=('localhost', 9200), index='.kibana', transport_class=None, map_ua=None,
+                 debug=False):
         self._host = host
         self.index = index
+        self.transport_class = transport_class,
+        self.map_ua = map_ua,
         self._index_pattern = index_pattern
         self.mapping = KibanaMapping(
             self.index,
             self._index_pattern,
             self._host,
+            self.map_ua,
             debug)
-        self.manager = KibanaManager(self.index, self._host, debug)
+        self.manager = KibanaManager(self.index, self._host, self.transport_class, debug)
 
     @property
     def index_pattern(self):
