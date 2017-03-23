@@ -151,9 +151,19 @@ class KibanaMapping():
 
     def field_cache_to_index_pattern(self, field_cache):
         """Return a .kibana index-pattern doc_type"""
+        search_results = urlopen(self.get_url).read().decode('utf-8')
+        index_pattern = json.loads(search_results)
+        if 'timeFieldName' in index_pattern['_source'].keys():
+            time_field_name = index_pattern['_source']['timeFieldName']
         mapping_dict = {}
         mapping_dict['customFormats'] = "{}"
         mapping_dict['title'] = self.index_pattern
+        try:
+          time_field_name
+        except NameError:
+          print("timeFieldName not defined.  Index pattern will not have a time field")
+        else:
+          mapping_dict['timeFieldName'] = time_field_name
         # now post the data into .kibana
         mapping_dict['fields'] = json.dumps(field_cache, separators=(',', ':'))
         # in order to post, we need to create the post string
