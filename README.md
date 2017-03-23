@@ -33,7 +33,8 @@ $ dotkibana --help
 usage: [-h] [--status STATUS_IDX] [--refresh REFRESH_IDX]
        [--poll POLL_IDX] [--export EXPORT_OBJ]
        [--import IMPORT_FILE] [--pkg] [--outdir OUTPUT_PATH]
-       [--host HOST]
+       [--host HOST] [--index INDEX] [--verbose]
+       [--transport-class TRANSPORT_CLASS] [--map-ua MAP_UA]
 
 .kibana interaction module
 
@@ -55,6 +56,12 @@ optional arguments:
                         export only: output file(s) directory
   --host HOST           ES host to use, format ip:port
                         default: 127.0.0.1:9200
+  --index INDEX         Kibana index to work on
+  --transport-class TRANSPORT_CLASS
+                        Elastic search transport class parameter
+  --map-ua MAP_UA       Over-ride default http user-agent with a custom,
+                        useful when custom authentication is required
+  --verbose, -v         show debug output
 ```
 
 
@@ -77,6 +84,10 @@ optional arguments:
 * Same, but each object in its own file:
     * `dotkibana --export Big-Picture --outdir tmp`
 
+## Transport class and Custom Auth
+* In `Elasticsearch` class you can specify transport class to override default http transport.
+  it is also helpful to use a custom auth useragent to query .kibana mappings
+    * `dotkibana --transport-class custom.AuthTransport --map-ua custom.AuthUa`
 
 ## Testing before Deployment
 

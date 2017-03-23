@@ -96,6 +96,18 @@ def getargs():
         dest='index',
         default='.kibana',
         help='Kibana index to work on')
+    parser.add_argument(
+        '--transport-class',
+        action='store',
+        dest='transport_class',
+        default=None,
+        help='Elastic search transport class parameter')
+    parser.add_argument(
+        '--map-ua',
+        action='store',
+        dest='map_ua',
+        default=None,
+        help='Over-ride default http user-agent with a custom, useful when custom authentication is required')
     infile = None
     exp_obj = None
     map_cmd = None
@@ -129,6 +141,8 @@ def getargs():
     args['host'] = host
     args['idx_pattern'] = idx_pattern
     args['mode'] = mode
+    args['transport_class'] = results.transport_class
+    args['map_ua'] = results.map_ua
     args['is_pkg'] = results.pkg_flag
     args['map_cmd'] = map_cmd
     args['infile'] = infile
@@ -141,7 +155,8 @@ def getargs():
 
 def main():
     args = getargs()
-    dotk = DotKibana(index_pattern=args['idx_pattern'], host=args['host'], index=args['index'], debug=args['pr_dbg'])
+    dotk = DotKibana(index_pattern=args['idx_pattern'], host=args['host'], index=args['index'], debug=args['pr_dbg'],
+                     transport_class=args['transport_class'], map_ua=args['map_ua'])
     if args['mode'] == 'mapping':
         return handle_mapping(dotk, args['map_cmd'])
     elif args['mode'] == 'export':

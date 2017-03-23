@@ -27,10 +27,11 @@ def iteritems(d):
 
 
 class KibanaMapping():
-    def __init__(self, index, index_pattern, host, debug=False):
+    def __init__(self, index, index_pattern, host, map_ua=None, debug=False):
         self.index = index
         self._index_pattern = index_pattern
         self._host = host
+        self.map_ua = map_ua,
         self.update_urls()
         # from the js possible mappings are:
         #     { type, indexed, analyzed, doc_values }
@@ -53,6 +54,19 @@ class KibanaMapping():
 
     def pr_err(self, msg):
         print('[ERR] Mapping %s' % msg)
+
+    def get_map_ua(self):
+        if self.map_ua:
+            if isinstance(self.map_ua, str):
+                pkg_path = self.map_ua.split('.')
+                my_class = pkg_path.pop()
+                mod = __import__(".".join(pkg_path), fromlist=[my_class])
+                ua_obj = getattr(mod, my_class)
+                self.map_ua = ua_obj.get_session()
+            else:
+                self.map_ua = requests.session()
+
+        return self.map_ua
 
     def update_urls(self):
         # 'http://localhost:5601/elasticsearch/aaa*/_mapping/field/*?ignore_unavailable=false&allow_no_indices=false&include_defaults=true'
@@ -97,7 +111,7 @@ class KibanaMapping():
         """Return a list of fields' mappings"""
         if cache_type == 'kibana':
             try:
-                search_results = urlopen(self.get_url).read().decode('utf-8')
+                search_results = self.get_map_ua().get(self.get_url).text
             except HTTPError:  # as e:
                 # self.pr_err("get_field_cache(kibana), HTTPError: %s" % e)
                 return []
@@ -106,7 +120,7 @@ class KibanaMapping():
             fields_str = index_pattern['_source']['fields']
             return json.loads(fields_str)
         elif cache_type == 'es' or cache_type.startswith('elastic'):
-            search_results = urlopen(self.es_get_url).read().decode('utf-8')
+            search_results = self.get_map_ua().get(self.es_get_url).text
             es_mappings = json.loads(search_results)
             # Results look like: {"<index_name>":{"mappings":{"<doc_type>":{"<field_name>":{"full_name":"<field_name>","mapping":{"<sub-field_name>":{"type":"date","index_name":"<sub-field_name>","boost":1.0,"index":"not_analyzed","store":false,"doc_values":false,"term_vector":"no","norms":{"enabled":false},"index_options":"docs","index_analyzer":"_date/16","search_analyzer":"_date/max","postings_format":"default","doc_values_format":"default","similarity":"default","fielddata":{},"ignore_malformed":false,"coerce":true,"precision_step":16,"format":"dateOptionalTime","null_value":null,"include_in_all":false,"numeric_resolution":"milliseconds","locale":""}}},  # noqa
             # now convert the mappings into the .kibana format

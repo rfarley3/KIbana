@@ -56,10 +56,11 @@ Alternative is to skip the ES API and use urllib/curl on
 
 class KibanaManager():
     """Import/Export Kibana objects"""
-    def __init__(self, index, host, debug=False):
+    def __init__(self, index, host, transport_class, debug=False):
         self._host_ip = host[0]
         self._host_port = host[1]
         self.index = index
+        self.transport_class = transport_class
         self.es = None
         self.max_hits = 9999
         self.debug = debug
@@ -86,8 +87,17 @@ class KibanaManager():
     def connect_es(self):
         if self.es is not None:
             return
-        self.es = Elasticsearch(
-            [{'host': self._host_ip, 'port': self._host_port}])
+        if self.transport_class:
+            if isinstance(self.transport_class, str):
+                pkg_path = self.transport_class.split('.')
+                my_class = pkg_path.pop()
+                mod = __import__(".".join(pkg_path), fromlist=[my_class])
+                transport_class_obj = getattr(mod, my_class)
+                self.es = Elasticsearch(
+                    [{'host': self._host_ip, 'port': self._host_port}], transport_class=transport_class_obj)
+            else:
+                self.es = Elasticsearch(
+                    [{'host': self._host_ip, 'port': self._host_port}])
 
     def read_object_from_file(self, filename):
         self.pr_inf("Reading object from file: " + filename)
